@@ -11,6 +11,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CallerInfo: typeof import('./src/components/CallerInfo.vue')['default']
+    CallerIsInGroup: typeof import('./src/components/CallerIsInGroup.vue')['default']
     TypesAffaireListeChoix: typeof import('./src/components/TypesAffaireListeChoix.vue')['default']
     UniteOrgChoix: typeof import('./src/components/UniteOrgChoix.vue')['default']
     UniteOrgNode: typeof import('./src/components/UniteOrgNode.vue')['default']
