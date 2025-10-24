@@ -11,7 +11,21 @@ export interface ApiResponseTAL {
   data?: TypeAffaire[];
 }
 
-export interface UniteOrg {
+export interface TypeAffaireUniteOrgCre {
+    idtypeaffaire: number
+    typeaffaire: string
+    idorgunit: number
+    descriptionorgunit: string
+    treeorgunit: string
+    nombrecreations: number
+}
+export interface ApiResponseUOC {
+  success?: boolean;
+  message?: string;
+  data?: TypeAffaireUniteOrgCre[];
+}
+
+export interface UniteOrganisationnelle {
   iduniteorg: number;
   iduoparente: number | null;
   nomuniteorg: string;
@@ -22,7 +36,7 @@ export interface UniteOrg {
 export interface ApiResponseUOL {
   success?: boolean;
   message?: string;
-  data?: UniteOrg[];
+  data?: UniteOrganisationnelle[];
 }
 // Interface générique pour les réponses API
 interface ApiResponse<T> {
@@ -47,12 +61,29 @@ export async function getTypesAffaireListe(server: string = '', page: string): P
     }
 }
 
+export async function getTypeAffaireUniteOrgCreListe(server: string = '', page: string, idtypeaffaire: number): Promise<ApiResponseUOC> {
+    const urltaol: string = `${server}${page}`
+    const params = new URLSearchParams([['idtypeaffaire', idtypeaffaire.toString()]])
+    try {
+        const response: AxiosResponse<TypeAffaireUniteOrgCre[]> = await axios.get(urltaol, { params })
+        const respData: ApiResponseUOC = {
+            "success": true,
+            "message": `ok`,
+            "data": response.data
+        }
+        console.log(respData)
+        return respData
+    } catch (error) {
+        return traiteAxiosError(error as AxiosError)
+    }
+}
+
 export async function getUnitesOrgListe(server: string = '', page: string, jsonCriteres: string = '{}'): Promise<ApiResponseUOL> {
     console.log(jsonCriteres)
     const urluol: string = `${server}${page}`
     const params = new URLSearchParams([['jsoncriteres', jsonCriteres]])
     try {
-        const response: AxiosResponse<UniteOrg[]> = await axios.get(urluol, { params })
+        const response: AxiosResponse<UniteOrganisationnelle[]> = await axios.get(urluol, { params })
         const respData: ApiResponseUOL = {
             "success": true,
             "message": `ok`,

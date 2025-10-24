@@ -10,17 +10,17 @@
 
 <script setup lang="ts">
 import type { FilterFunction } from 'vuetify'
-import type { TypeAffaire, ApiResponseTAL } from '@/axioscalls.js'
+import type { TypeAffaire, ApiResponseTAL } from '@/axioscalls.ts'
 
 import { ref, watch } from 'vue'
-import { getTypesAffaireListe } from '@/axioscalls.js'
+import { getTypesAffaireListe } from '@/axioscalls.ts'
 
 const messageErreur = ref<string | undefined>('')
 const ssServer = ref<string>('')
 if (import.meta.env.DEV) {
     ssServer.value = 'https://mygolux.lausanne.ch'
 }
-const ssPage = ref<string>('/goeland/gestion_spec/affaire_datainitgestion/axios/typesaffaire_liste.php')
+const ssPage = ref<string>('/goeland/gestion_spec/typeaffaire_droitcreation/ajax/typesaffaire_liste.php')
 
 const typeAffaireChoisi = ref<TypeAffaire | null>(null)
 const typesAffaireListe = ref<TypeAffaire[]>([])

@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { getUnitesOrgListe } from '@/axioscalls.js'
-import type { UniteOrg, ApiResponseUOL }  from '@/axioscalls.js'
+import type { UniteOrganisationnelle, ApiResponseUOL }  from '@/axioscalls.js'
 
 interface Props {
   modeChoix?: string
@@ -37,7 +37,7 @@ interface Props {
   ssPage?: string
 }
 
-type UnitesOrg = UniteOrg[]
+type UnitesOrg = UniteOrganisationnelle[]
 
 interface UniteOrgTree {
   id: number;
@@ -76,7 +76,7 @@ const ssPage = ref<string>(props.ssPage)
 const jsonCriteres: { unitehorsvdl: boolean } = { "unitehorsvdl" : buniteHorsVdL.value }
 
 const response: ApiResponseUOL = await getUnitesOrgListe(ssServer.value, ssPage.value, JSON.stringify(jsonCriteres))
-const unitesOrgListe: UniteOrg[] = response.success && response.data ? response.data : []
+const unitesOrgListe: UniteOrganisationnelle[] = response.success && response.data ? response.data : []
 
 const unitesOrgTree = ref<UniteOrgTree[]>(transforUOListe2UOTree(unitesOrgListe))
 console.log(unitesOrgTree.value)
@@ -87,9 +87,9 @@ const emit = defineEmits<{
 
 const unitesOrgListeChoisi = ref<UniteOrgChoix[]>([])
 
-function transforUOListe2UOTree(unitesOrgListe: UniteOrg[]): UniteOrgTree[] {
+function transforUOListe2UOTree(unitesOrgListe: UniteOrganisationnelle[]): UniteOrgTree[] {
     // Fonction interne pour créer un nœud d'arbre à partir d'une unité organisationnelle
-    const createTreeNode = (uniteOrg: UniteOrg): UniteOrgTree => ({
+    const createTreeNode = (uniteOrg: UniteOrganisationnelle): UniteOrgTree => ({
         id: uniteOrg.iduniteorg,
         nom: uniteOrg.nomuniteorg,
         description: uniteOrg.descriptionuniteorg,
