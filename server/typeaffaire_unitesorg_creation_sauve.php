@@ -22,11 +22,20 @@ if ($idCaller > 0) {
             $dbgo = new DBGoeland();
             $dbgo->queryRetNothing($sSql, 'W');
             unset($dbgo);
-            echo '{"message":"ok"}';
+            $success = true;
         }
+        $message = 'ok';
+        echo '{"message":"ok"}';
     } else {
-        echo '{"message":"ERREUR GoelandManager requis"}';
+        $success = false;
+        $message = 'ERREUR GoelandManager requis';
     }
 } else {
-    echo '{"message":"ERREUR athentification F5"}';
+    $success = false;
+    $message = 'ERREUR athentification F5';
 }
+$typeaffaireUnireOrgCreationSauve = [
+    'success' => $success,
+    'message' => $message,
+];
+echo json_encode($typeaffaireUnireOrgCreationSauve);

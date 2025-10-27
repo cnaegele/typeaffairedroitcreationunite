@@ -95,6 +95,7 @@ interface DataSauve {
 
 const messageErreur = ref<string | undefined>('')
 const message = ref<string>('')
+let erreurSauve: boolean = false
 
 //Data caller et droits caller
 const callerInformation = ref<UserInfo | null | undefined>(null)
@@ -114,9 +115,11 @@ const ssPageSauve: string = '/goeland/gestion_spec/typeaffaire_droitcreation/aja
 const listeUniteOrgCre = async (idTypeAffaire: number): Promise<void> => {
   const response: ApiResponseUOC = await getTypeAffaireUniteOrgCreListe(ssServer.value, ssPage, idTypeAffaire)
   if (response.success === false) {
-    messageErreur.value = response.message
+    messageErreur.value += `${response.message}\n`
   } else {
-    messageErreur.value = ''
+    if (erreurSauve === false) {
+      messageErreur.value = ''
+    }
   }
   unitesOrgCreListe.value = response.success && response.data ? response.data : []
 }
@@ -135,6 +138,9 @@ const supprimeUniteOrgCre = async (idUniteOrg: number): Promise<void> => {
     const response: ApiResponse<[]> = await sauveTypeAffaireOrgunitCreation(ssServer.value, ssPageSauve, JSON.stringify(oData))
     if (response.success === false) {
       messageErreur.value += `${response.message}\n`
+      erreurSauve = true
+    } else {
+      erreurSauve = false
     }
     listeUniteOrgCre(idTypeAffaireChoisi.value)
   }
@@ -161,10 +167,12 @@ const receptionUniteOrg = (jsonData: string) => {
         idtypeaffaire: idTypeAffaireChoisi.value,
         iduniteorg: item.id
       }
-      console.log(oData)
       const response: ApiResponse<[]> = await sauveTypeAffaireOrgunitCreation(ssServer.value, ssPageSauve, JSON.stringify(oData))
       if (response.success === false) {
         messageErreur.value += `${response.message}\n`
+        erreurSauve = true
+      } else {
+        erreurSauve = false
       }
       listeUniteOrgCre(idTypeAffaireChoisi.value)
     }
@@ -188,3 +196,31 @@ const receptionCallerInGroupGoelandManager = (jsonData: string) => {
   }
 }  
 </script>
+
+<style scoped>
+#divErreur {
+    background-color: lightsalmon;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 0px;
+    padding: 5px;
+    border-style: solid;
+    border-width: thin;
+    border-color: black;
+    border-radius: 20px;
+    white-space: pre-line;
+    /* Convertit les \n en sauts de ligne */
+}
+#divMessage {
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 0px;
+    padding: 5px;
+    border-style: solid;
+    border-width: thin;
+    border-color: black;
+    border-radius: 20px;
+    white-space: pre-line;
+    /* Convertit les \n en sauts de ligne */
+}
+</style>
