@@ -2,8 +2,14 @@
     <v-card>
         <v-card-text>
             <v-autocomplete v-model="typeAffaireChoisi" label="choix d'un type d'affaire" :items="typesAffaireListe"
-                :custom-filter="customFilter" item-title="typeaffaire" item-value="idtypeaffaire" return-object class="flex-0-0"
-                style="width: 600px; min-width: 400px;" no-virtual clearable></v-autocomplete>
+                :custom-filter="customFilter" item-title="typeaffaire" item-value="idtypeaffaire" return-object
+                class="flex-0-0" style="width: 600px; min-width: 400px;" no-virtual clearable>
+                <template v-slot:item="{ props, item }">
+                    <v-list-item v-bind="props" :class="{ 'text-grey': item.raw.bactif === 0 }"
+                        :style="item.raw.bactif === 0 ? 'opacity: 0.9' : ''">
+                    </v-list-item>
+                </template>
+            </v-autocomplete>
         </v-card-text>
     </v-card>
 </template>
@@ -33,17 +39,20 @@ if (response.success === false) {
 typesAffaireListe.value = response.success && response.data ? response.data : []
 
 watch(() => typeAffaireChoisi.value, (): void => {
-  if (typeAffaireChoisi.value !== null) {
-    choixTypeAffaire(typeAffaireChoisi.value)
-  }
+    if (typeAffaireChoisi.value !== null) {
+        choixTypeAffaire(typeAffaireChoisi.value)
+    } else {
+        const notype: TypeAffaire = { idtypeaffaire: 0, typeaffaire: '', bactif: 0 }
+        choixTypeAffaire(notype)
+    }
 })
 
 const emit = defineEmits<{
-  (e: 'choixTypeAffaire', id: number, choix: string): void
+    (e: 'choixTypeAffaire', id: number, choix: string): void
 }>()
 
 const choixTypeAffaire = (typeAffaire: TypeAffaire): void => {
-  emit('choixTypeAffaire', typeAffaire.idtypeaffaire, JSON.stringify(typeAffaire))
+    emit('choixTypeAffaire', typeAffaire.idtypeaffaire, JSON.stringify(typeAffaire))
 }
 
 const customFilter: FilterFunction = (

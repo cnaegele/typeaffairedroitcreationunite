@@ -6,9 +6,9 @@ export interface TypeAffaire {
     bactif: number
 }
 export interface ApiResponseTAL {
-  success?: boolean;
-  message?: string;
-  data?: TypeAffaire[];
+    success?: boolean;
+    message?: string;
+    data?: TypeAffaire[];
 }
 
 export interface TypeAffaireUniteOrgCre {
@@ -20,26 +20,26 @@ export interface TypeAffaireUniteOrgCre {
     nombrecreations: number
 }
 export interface ApiResponseUOC {
-  success?: boolean;
-  message?: string;
-  data?: TypeAffaireUniteOrgCre[];
+    success?: boolean;
+    message?: string;
+    data?: TypeAffaireUniteOrgCre[];
 }
 
 export interface UniteOrganisationnelle {
-  iduniteorg: number;
-  iduoparente: number | null;
-  nomuniteorg: string;
-  descriptionuniteorg: string;
-  bcache: number;
-  codeordre: string;
+    iduniteorg: number;
+    iduoparente: number | null;
+    nomuniteorg: string;
+    descriptionuniteorg: string;
+    bcache: number;
+    codeordre: string;
 }
 export interface ApiResponseUOL {
-  success?: boolean;
-  message?: string;
-  data?: UniteOrganisationnelle[];
+    success?: boolean;
+    message?: string;
+    data?: UniteOrganisationnelle[];
 }
 // Interface générique pour les réponses API
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
     success: boolean
     message: string
     data?: T[]
@@ -96,10 +96,26 @@ export async function getUnitesOrgListe(server: string = '', page: string, jsonC
     }
 }
 
+export async function sauveTypeAffaireOrgunitCreation(server: string = '', page: string, jsonData: string = '{}'): Promise<ApiResponse<[]>> {
+    const url: string = `${server}${page}`
+    console.log(`sauveTypeAffaireOrgunitCreation: url: ${url} data: ${jsonData}`)
+    try {
+        const response: AxiosResponse = await axios.post(url, jsonData, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        console.log(response.data)
+        return response.data
+    } catch (error) {
+        return traiteAxiosError(error as AxiosError)
+    }
+}
+
 function traiteAxiosError<T>(error: AxiosError): ApiResponse<T> {
     let msgErr: string = ''
     if (error.response) {
-        msgErr = `${error.response.data}<br>${error.response.status}<br>${error.response.headers}`    
+        msgErr = `${error.response.data}<br>${error.response.status}<br>${error.response.headers}`
     } else if (error.request.responseText) {
         msgErr = error.request.responseText
     } else {
@@ -109,5 +125,5 @@ function traiteAxiosError<T>(error: AxiosError): ApiResponse<T> {
         "success": false,
         "message": `ERREUR. ${msgErr}`,
     }
-    return(respData)
+    return (respData)
 }

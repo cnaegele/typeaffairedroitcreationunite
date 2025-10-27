@@ -24,9 +24,20 @@
           <v-list max-height="400">
             <v-list-subheader class="d-flex justify-space-between align-center">
               <span>Unités organisationnelles autorisées ({{ unitesOrgCreListe.length }})</span>
-              <v-btn color="primary" variant="text" size="small" @click="dialogChoixUO = true">
-                Ajouter une unité
-              </v-btn>
+              <div class="d-flex align-center ga-2">
+                <v-btn color="primary" variant="text" size="small" @click="dialogChoixUO = true">
+                  Ajouter une unité
+                </v-btn>
+                <span>Choix</span>
+                <v-btn-toggle v-model="modeChoixUO" mandatory density="compact" color="primary">
+                  <v-btn value="unique" size="small" class="text-none">
+                    unique
+                  </v-btn>
+                  <v-btn value="multiple" size="small" class="text-none">
+                    multiple
+                  </v-btn>
+                </v-btn-toggle>
+              </div>
             </v-list-subheader>
             <v-list-item v-for="uniteOrgCre in unitesOrgCreListe" :key="uniteOrgCre.idorgunit"
               :value="uniteOrgCre.idorgunit">
@@ -45,11 +56,12 @@
     </v-main>
   </v-app>
 
-   <v-dialog v-model="dialogChoixUO" max-width="1280">
+  <v-dialog v-model="dialogChoixUO" max-width="1280">
     <v-card>
       <v-card-text>
         <Suspense>
-          <UniteOrgChoix :ssServer="ssServer" @choixUniteOrg="receptionUniteOrg"></UniteOrgChoix>
+          <UniteOrgChoix :ssServer="ssServer" :modeChoix="modeChoixUO" @choixUniteOrg="receptionUniteOrg">
+          </UniteOrgChoix>
         </Suspense>
       </v-card-text>
       <v-card-actions>
@@ -57,18 +69,29 @@
         <v-btn text="Fermer" @click="closeChoixUO()"></v-btn>
       </v-card-actions>
     </v-card>
-  </v-dialog> 
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
 import type { ApiResponseUI, UserInfo } from './CallerInfo.vue'
 import type { ApiResponseIG } from './CallerIsInGroup.vue'
-import type { TypeAffaireUniteOrgCre, ApiResponseUOC, UniteOrganisationnelle } from '@/axioscalls.ts'
+import type { TypeAffaireUniteOrgCre, ApiResponseUOC, UniteOrganisationnelle, ApiResponse } from '@/axioscalls.ts'
 import { ref } from 'vue'
 import CallerInfo from './CallerInfo.vue';
 import CallerIsInGroup from './CallerIsInGroup.vue';
 import TypesAffaireListeChoix from './TypesAffaireListeChoix.vue';
-import { getTypeAffaireUniteOrgCreListe } from '@/axioscalls.ts'
+import { getTypeAffaireUniteOrgCreListe, sauveTypeAffaireOrgunitCreation } from '@/axioscalls.ts'
+
+interface UOChoisie {
+  id: number
+  nom: string
+  description?: string
+}
+interface DataSauve {
+  action: string
+  idtypeaffaire: number
+  iduniteorg: number
+}
 
 const messageErreur = ref<string | undefined>('')
 const message = ref<string>('')
@@ -80,14 +103,15 @@ const bGoelandManager = ref<boolean>(false)
 const idTypeAffaireChoisi = ref<number | null>(null)
 const unitesOrgCreListe = ref<TypeAffaireUniteOrgCre[]>([])
 const dialogChoixUO = ref<boolean>(false)
+const modeChoixUO = ref<string>('unique')
 const ssServer = ref<string>('')
 if (import.meta.env.DEV) {
   ssServer.value = 'https://mygolux.lausanne.ch'
 }
+const ssPage: string = '/goeland/gestion_spec/typeaffaire_droitcreation/ajax/typeaffaire_unitesorg_creation_liste.php'
+const ssPageSauve: string = '/goeland/gestion_spec/typeaffaire_droitcreation/ajax/typeaffaire_unitesorg_creation_sauve.php'
 
 const listeUniteOrgCre = async (idTypeAffaire: number): Promise<void> => {
-  const ssPage: string = '/goeland/gestion_spec/typeaffaire_droitcreation/ajax/typeaffaire_unitesorg_creation_liste.php'
-
   const response: ApiResponseUOC = await getTypeAffaireUniteOrgCreListe(ssServer.value, ssPage, idTypeAffaire)
   if (response.success === false) {
     messageErreur.value = response.message
@@ -101,28 +125,50 @@ const closeChoixUO = (): void => {
   dialogChoixUO.value = false
 }
 
-const supprimeUniteOrgCre = (idOrgUnit: number): void => {
-  //supprimer...
-  //...
+const supprimeUniteOrgCre = async (idUniteOrg: number): Promise<void> => {
   if (idTypeAffaireChoisi.value !== null) {
+    const oData: DataSauve = {
+      action: 'supprime',
+      idtypeaffaire: idTypeAffaireChoisi.value,
+      iduniteorg: idUniteOrg
+    }
+    const response: ApiResponse<[]> = await sauveTypeAffaireOrgunitCreation(ssServer.value, ssPageSauve, JSON.stringify(oData))
+    if (response.success === false) {
+      messageErreur.value += `${response.message}\n`
+    }
     listeUniteOrgCre(idTypeAffaireChoisi.value)
   }
 }
 
 const receptionTypeAffaire = (idTypeAffaire: number, jsonData: string) => {
   idTypeAffaireChoisi.value = idTypeAffaire
-  listeUniteOrgCre(idTypeAffaire)
+  if (idTypeAffaire > 0) {
+    listeUniteOrgCre(idTypeAffaire)
+  } else {
+    idTypeAffaireChoisi.value = null
+  }
 }
 
 const receptionUniteOrg = (jsonData: string) => {
   dialogChoixUO.value = false
-  const uoChoisie: UniteOrganisationnelle = JSON.parse(jsonData)
-  console.log(uoChoisie)
-  //ajouter...
-  //...
-  if (idTypeAffaireChoisi.value !== null) {
-    listeUniteOrgCre(idTypeAffaireChoisi.value)
-  }
+  if (modeChoixUO.value == 'unique') { jsonData = `[${jsonData}]` }
+  const uoChoisie: UOChoisie[] = JSON.parse(jsonData)
+  console.log(jsonData)
+  uoChoisie.forEach(async (item: UOChoisie) => {
+    if (idTypeAffaireChoisi.value !== null) {
+      const oData: DataSauve = {
+        action: 'sauve',
+        idtypeaffaire: idTypeAffaireChoisi.value,
+        iduniteorg: item.id
+      }
+      console.log(oData)
+      const response: ApiResponse<[]> = await sauveTypeAffaireOrgunitCreation(ssServer.value, ssPageSauve, JSON.stringify(oData))
+      if (response.success === false) {
+        messageErreur.value += `${response.message}\n`
+      }
+      listeUniteOrgCre(idTypeAffaireChoisi.value)
+    }
+  })
 }
 
 const receptionCallerInfo = (jsonData: string) => {
